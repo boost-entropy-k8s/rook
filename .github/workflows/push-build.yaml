@@ -14,7 +14,7 @@ defaults:
 
 jobs:
   push-image-to-container-registry:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     if: github.repository == 'rook/rook'
     steps:
       - name: checkout
@@ -51,10 +51,15 @@ jobs:
           echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
           echo "GITHUB_REF"=${GITHUB_REF} >> $GITHUB_ENV
 
-      - name: pip install
+      - name: install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get -y install python3-pip
+          python3 -m pip install --upgrade pip setuptools wheel
+          wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.3.1.tar.gz -O libgit2-1.3.1.tar.gz
+          tar xzf libgit2-1.3.1.tar.gz
+          cd libgit2-1.3.1/
+          cmake .
+          make
+          sudo make install
 
       - name: build and release
         env:
