@@ -18,9 +18,9 @@ include ../image.mk
 # Image Build Options
 
 ifeq ($(GOARCH),amd64)
-CEPH_VERSION ?= v16.2.7-20220216
+CEPH_VERSION ?= v17.2.0-20220420
 else
-CEPH_VERSION ?= v16.2.7-20220216
+CEPH_VERSION ?= v17.2.0-20220420
 endif
 REGISTRY_NAME = quay.io
 BASEIMAGE = $(REGISTRY_NAME)/ceph/ceph-$(GOARCH):$(CEPH_VERSION)
@@ -147,7 +147,7 @@ list-image: ## Create a list of images for offline installation
 	rm -f $(IMAGE_TMP)
 	awk '/image:/ {print $2}' $(MANIFESTS_DIR)/operator.yaml $(MANIFESTS_DIR)/cluster.yaml | \
 		cut -d: -f2- | tee $(IMAGE_TMP)
-	awk '/quay.io/ || /k8s.gcr.io/ {print $3}' ../../pkg/operator/ceph/csi/spec.go | \
+	awk '/quay.io/ || /registry.k8s.io/ {print $3}' ../../pkg/operator/ceph/csi/spec.go | \
 		cut -d= -f2- | tr -d '"' | tee -a $(IMAGE_TMP)
 	rm -f $(MANIFESTS_DIR)/images.txt
 	cat $(IMAGE_TMP) | sort -h | uniq | tee $(MANIFESTS_DIR)/images.txt
