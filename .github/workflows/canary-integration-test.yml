@@ -104,26 +104,12 @@ jobs:
     - name: test external script with restricted_auth_permission flag and without having cephfs_filesystem flag
       run: |
         toolbox=$(kubectl get pod -l app=rook-ceph-tools -n rook-ceph -o jsonpath='{.items[*].metadata.name}')
-        # create `radosNamespace1` rados-namespace for `replicapool` rbd data-pool
-        kubectl -n rook-ceph exec $toolbox -- rbd namespace create replicapool/radosNamespace1
-        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rados-namespace radosNamespace1 --cluster-name rookStorage --restricted-auth-permission true
-        # test the CRD created rados namespace `namespace-a` using external script
-        kubectl create -f deploy/examples/radosnamespace.yaml
-        timeout 60 sh -c "until kubectl -n rook-ceph exec $toolbox -- rbd namespace ls replicapool --format=json|jq .[0].name|grep -q "namespace-a"; do sleep 1 && echo 'waiting for the rados namespace to be created'; done"
-        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rados-namespace namespace-a --cluster-name rookStorage --restricted-auth-permission true
-        # test the rados namespace which not exit for replicapool(false testing)
-        if output=$(kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rados-namespace false-test-namespace --cluster-name rookStorage --restricted-auth-permission true); then
-          echo $output
-        else
-          echo "script failed because wrong rados namespace was passed"
-        fi
+        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --cluster-name rookstorage --restricted-auth-permission true
 
     - name: test external script with restricted_auth_permission flag
       run: |
         toolbox=$(kubectl get pod -l app=rook-ceph-tools -n rook-ceph -o jsonpath='{.items[*].metadata.name}')
-        # create `radosNamespace` rados-namespace for `replicapool` rbd data-pool
-        kubectl -n rook-ceph exec $toolbox -- rbd namespace create replicapool/radosNamespace
-        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --cephfs-filesystem-name myfs --rbd-data-pool-name replicapool --rados-namespace radosNamespace --cluster-name rookStorage --restricted-auth-permission true
+        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --cephfs-filesystem-name myfs --rbd-data-pool-name replicapool --cluster-name rookstorage --restricted-auth-permission true
 
     - name: test the upgrade flag
       run: |
@@ -139,12 +125,12 @@ jobs:
       run: |
         toolbox=$(kubectl get pod -l app=rook-ceph-tools -n rook-ceph -o jsonpath='{.items[*].metadata.name}')
         # print existing client auth
-        kubectl -n rook-ceph exec $toolbox -- ceph auth get client.csi-rbd-node-rookStorage-replicapool-radosNamespace
-        # restricted auth user need to provide --rbd-data-pool-name, --rados-namespace,
+        kubectl -n rook-ceph exec $toolbox -- ceph auth get client.csi-rbd-node-rookstorage-replicapool
+        # restricted auth user need to provide --rbd-data-pool-name,
         #  --cluster-name and --run-as-user flag while upgrading
-        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --upgrade --rbd-data-pool-name replicapool --rados-namespace radosNamespace --cluster-name rookStorage  --run-as-user client.csi-rbd-node-rookStorage-replicapool-radosNamespace
+        kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --upgrade --rbd-data-pool-name replicapool --cluster-name rookstorage  --run-as-user client.csi-rbd-node-rookstorage-replicapool
         # print ugraded client auth
-        kubectl -n rook-ceph exec $toolbox -- ceph auth get client.csi-rbd-node-rookStorage-replicapool-radosNamespace
+        kubectl -n rook-ceph exec $toolbox -- ceph auth get client.csi-rbd-node-rookstorage-replicapool
 
     - name: check-ownerreferences
       run: tests/scripts/github-action-helper.sh check_ownerreferences
@@ -352,7 +338,6 @@ jobs:
 
     - name: use local disk as OSD
       run: |
-
         BLOCK=$(sudo lsblk --paths|awk '/14G/ {print $1}'| head -1)
         tests/scripts/github-action-helper.sh use_local_disk
         tests/scripts/create-bluestore-partitions.sh --disk "$BLOCK" --wipe-only
@@ -365,6 +350,52 @@ jobs:
 
     - name: deploy cluster
       run: tests/scripts/github-action-helper.sh deploy_cluster osd_with_metadata_device
+
+    - name: wait for prepare pod
+      run: tests/scripts/github-action-helper.sh wait_for_prepare_pod
+
+    - name: wait for ceph to be ready
+      run: tests/scripts/github-action-helper.sh wait_for_ceph_to_be_ready osd 1
+
+    - name: check-ownerreferences
+      run: tests/scripts/github-action-helper.sh check_ownerreferences
+
+    - name: collect common logs
+      if: always()
+      uses: ./.github/workflows/collect-logs
+      with:
+        name: canary
+
+    - name: setup tmate session for debugging when event is PR
+      if: failure() && github.event_name == 'pull_request'
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 60
+
+  encryption:
+    runs-on: ubuntu-18.04
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-ci')"
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: setup cluster resources
+      uses: ./.github/workflows/canary-test-config
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: validate-yaml
+      run: tests/scripts/github-action-helper.sh validate_yaml
+
+    - name: use local disk as OSD
+      run: |
+        BLOCK=$(sudo lsblk --paths|awk '/14G/ {print $1}'| head -1)
+        tests/scripts/github-action-helper.sh use_local_disk
+        tests/scripts/create-bluestore-partitions.sh --disk "$BLOCK" --wipe-only
+
+    - name: deploy cluster
+      run: tests/scripts/github-action-helper.sh deploy_cluster encryptiton
 
     - name: wait for prepare pod
       run: tests/scripts/github-action-helper.sh wait_for_prepare_pod
