@@ -513,9 +513,15 @@ If a user configures a limit or request value that is too low, Rook will still r
 * `mon`: 1024MB
 * `mgr`: 512MB
 * `osd`: 2048MB
-* `prepareosd`: 50MB
 * `crashcollector`: 60MB
 * `mgr-sidecar`: 100MB limit, 40MB requests
+* `prepareosd`: no limits (see the note)
+
+!!! note
+    We recommend not setting memory limits on the OSD prepare job to prevent OSD provisioning failure due to memory constraints.
+    The OSD prepare job bursts memory usage during the OSD provisioning depending on the size of the device, typically
+    1-2Gi for large disks. The OSD prepare job only bursts a single time per OSD.
+    All future runs of the OSD prepare job will detect the OSD is already provisioned and skip the provisioning.
 
 !!! hint
     The resources for MDS daemons are not configured in the Cluster. Refer to the [Ceph Filesystem CRD](../Shared-Filesystem/ceph-filesystem-crd.md) instead.
