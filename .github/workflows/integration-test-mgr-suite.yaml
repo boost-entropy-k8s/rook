@@ -24,7 +24,7 @@ jobs:
         kubernetes-versions : ['v1.25.0']
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -49,7 +49,7 @@ jobs:
           tests/scripts/collect-logs.sh
 
       - name: Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ceph-mgr-suite-artifact-${{ matrix.kubernetes-versions }}
