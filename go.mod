@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/IBM/keyprotect-go-client v0.9.2
-	github.com/aws/aws-sdk-go v1.44.219
+	github.com/aws/aws-sdk-go v1.44.224
 	github.com/banzaicloud/k8s-objectmatcher v1.8.0
 	github.com/ceph/go-ceph v0.20.0
 	github.com/coreos/pkg v0.0.0-20220810130054-c7d1c02cb6cf
@@ -31,7 +31,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.1
-	k8s.io/apimachinery v0.26.2
+	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.1
 	k8s.io/cloud-provider v0.26.1
 	k8s.io/utils v0.0.0-20230202215443-34013725500c
