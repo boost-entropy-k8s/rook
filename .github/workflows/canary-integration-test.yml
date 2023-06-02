@@ -176,17 +176,27 @@ jobs:
           rgw_endpoint=$(kubectl get service -n rook-ceph |  awk '/rgw/ {print $3":80"}')
           toolbox=$(kubectl get pod -l app=rook-ceph-tools -n rook-ceph -o jsonpath='{.items[*].metadata.name}')
           # pass the valid rgw-endpoint of same ceph cluster
-          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint $rgw_endpoint; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint $rgw_endpoint 2> output.txt; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          tests/scripts/github-action-helper.sh check_empty_file output.txt
+          rm -f output.txt
           # pass the invalid rgw-endpoint of different ceph cluster
-          if output=$(timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint 10.108.96.128:80; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"); then
+          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint 10.108.96.128:80  2> output.txt; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          if [ -s output.txt ]; then
             echo "script run completed with stderr error after passing the wrong rgw-endpoint: $output"
+            rm -f output.txt
           else
-            echo "validation failed because wrong endpoint was provided"
+            echo "no stderr error even wrong endpoint was provided"
+            rm -f output.txt
+            exit 1
           fi
           # pass the valid rgw-endpoint of same ceph cluster with --rgw-tls-cert-path
-          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint $rgw_endpoint --rgw-tls-cert-path my-cert; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint $rgw_endpoint --rgw-tls-cert-path my-cert 2> output.txt; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          tests/scripts/github-action-helper.sh check_empty_file output.txt
+          rm -f output.txt
           # pass the valid rgw-endpoint of same ceph cluster with --rgw-skip-tls
-          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint $rgw_endpoint --rgw-skip-tls true; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          timeout 15 sh -c "until kubectl -n rook-ceph exec $toolbox -- python3 /etc/ceph/create-external-cluster-resources.py --rbd-data-pool-name replicapool --rgw-endpoint $rgw_endpoint --rgw-skip-tls true 2> output.txt; do sleep 1 && echo 'waiting for the rgw endpoint to be validated'; done"
+          tests/scripts/github-action-helper.sh check_empty_file output.txt
+          rm -f output.txt
 
       - name: validate multisite
         run: |
@@ -233,6 +243,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   raw-disk:
     runs-on: ubuntu-20.04
@@ -287,6 +298,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   two-osds-in-device:
     runs-on: ubuntu-20.04
@@ -335,6 +347,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   osd-with-metadata-device:
     runs-on: ubuntu-20.04
@@ -389,6 +402,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption:
     runs-on: ubuntu-20.04
@@ -488,6 +502,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   pvc:
     runs-on: ubuntu-20.04
@@ -562,6 +577,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   pvc-db:
     runs-on: ubuntu-20.04
@@ -612,6 +628,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   pvc-db-wal:
     runs-on: ubuntu-20.04
@@ -665,6 +682,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption-pvc:
     runs-on: ubuntu-20.04
@@ -730,6 +748,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption-pvc-db:
     runs-on: ubuntu-20.04
@@ -782,6 +801,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption-pvc-db-wal:
     runs-on: ubuntu-20.04
@@ -844,6 +864,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption-pvc-kms-vault-token-auth:
     runs-on: ubuntu-20.04
@@ -925,6 +946,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption-pvc-kms-vault-k8s-auth:
     runs-on: ubuntu-20.04
@@ -988,6 +1010,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   lvm-pvc:
     runs-on: ubuntu-20.04
@@ -1043,6 +1066,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   multi-cluster-mirroring:
     runs-on: ubuntu-20.04
@@ -1299,6 +1323,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   rgw-multisite-testing:
     runs-on: ubuntu-20.04
@@ -1328,6 +1353,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   encryption-pvc-kms-ibm-kp:
     runs-on: ubuntu-20.04
@@ -1360,6 +1386,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   multus-cluster-network:
     runs-on: ubuntu-20.04
@@ -1439,6 +1466,7 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
 
   csi-hostnetwork-disabled:
     runs-on: ubuntu-20.04
@@ -1492,3 +1520,4 @@ jobs:
         uses: ./.github/workflows/tmate_debug
         with:
           use-tmate: ${{ secrets.USE_TMATE }}
+          limit-access-to-actor: true
