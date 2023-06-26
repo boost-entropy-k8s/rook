@@ -6,7 +6,7 @@ replace github.com/rook/rook/pkg/apis => ./pkg/apis
 
 require (
 	github.com/IBM/keyprotect-go-client v0.10.0
-	github.com/aws/aws-sdk-go v1.44.288
+	github.com/aws/aws-sdk-go v1.44.289
 	github.com/banzaicloud/k8s-objectmatcher v1.8.0
 	github.com/ceph/go-ceph v0.22.0
 	github.com/coreos/pkg v0.0.0-20230601102743-20bbbf26f4d8
@@ -15,7 +15,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/vault v1.13.2
-	github.com/hashicorp/vault-plugin-secrets-kv v0.14.3
+	github.com/hashicorp/vault-plugin-secrets-kv v0.15.0
 	github.com/hashicorp/vault/api v1.9.2
 	github.com/hashicorp/vault/sdk v0.9.0
 	github.com/jetstack/cert-manager v1.7.3
