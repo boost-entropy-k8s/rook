@@ -25,6 +25,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+
       - name: setup cluster resources
         uses: ./.github/workflows/integration-test-config-latest-k8s
         with:
@@ -66,6 +73,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+
       - name: setup latest cluster resources
         uses: ./.github/workflows/integration-test-config-latest-k8s
         with:
@@ -106,6 +120,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+
       - name: setup latest cluster resources
         uses: ./.github/workflows/integration-test-config-latest-k8s
         with:
@@ -145,6 +166,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+
       - name: setup latest cluster resources
         uses: ./.github/workflows/integration-test-config-latest-k8s
         with:
@@ -155,7 +183,7 @@ jobs:
         run: |
           tests/scripts/github-action-helper.sh collect_udev_logs_in_background
           export DEVICE_FILTER=$(lsblk|awk '/14G/ {print $1}'| head -1)
-          go test -v -timeout 1800s -run CephUpgradeSuite/TestUpgradeRook github.com/rook/rook/tests/integration
+          go test -v -timeout 2400s -run CephUpgradeSuite/TestUpgradeRook github.com/rook/rook/tests/integration
 
       - name: collect common logs
         if: always()
@@ -183,6 +211,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
 
       - name: setup cluster resources
         uses: ./.github/workflows/integration-test-config-latest-k8s
@@ -225,6 +260,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
 
       - name: setup latest cluster resources
         uses: ./.github/workflows/integration-test-config-latest-k8s
