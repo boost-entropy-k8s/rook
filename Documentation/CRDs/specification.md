@@ -7989,6 +7989,47 @@ bool
 <p>Enabled determines whether a module should be enabled or not</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>settings</code><br/>
+<em>
+<a href="#ceph.rook.io/v1.ModuleSettings">
+ModuleSettings
+</a>
+</em>
+</td>
+<td>
+<p>Settings to further configure the module</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ceph.rook.io/v1.ModuleSettings">ModuleSettings
+</h3>
+<p>
+(<em>Appears on:</em><a href="#ceph.rook.io/v1.Module">Module</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>balancerMode</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>BalancerMode sets the <code>balancer</code> module with different modes like <code>upmap</code>, <code>crush-compact</code> etc</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="ceph.rook.io/v1.MonSpec">MonSpec
@@ -12127,6 +12168,42 @@ Preventing the OSD pods to restart immediately in such scenarios will prevent Ro
 peering of the PGs mapped to the OSD.
 User needs to manually restart the OSD pod if they manage to fix the underlying OSD flapping issue before the restart interval.
 The sleep will be disabled if this interval is set to 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fullRatio</code><br/>
+<em>
+float64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FullRatio is the ratio at which the cluster is considered full and ceph will stop accepting writes. Default is 0.95.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nearFullRatio</code><br/>
+<em>
+float64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NearFullRatio is the ratio at which the cluster is considered nearly full and will raise a ceph health warning. Default is 0.85.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>backfillFullRatio</code><br/>
+<em>
+float64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BackfillFullRatio is the ratio at which the cluster is too full for backfill. Backfill will be disabled if above this threshold. Default is 0.90.</p>
 </td>
 </tr>
 </tbody>
